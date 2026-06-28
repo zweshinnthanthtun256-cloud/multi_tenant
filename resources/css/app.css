@@ -1,0 +1,42 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+@theme {
+  --font-sans: 'Instrument Sans', sans-serif;
+}
+
+/* Pulse animation သတ်မှတ်ခြင်း */
+/* resources/css/app.css */
+@keyframes logo-pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-logo {
+  animation: logo-pulse 2s infinite ease-in-out;
+}
+
+/* သင်ပေးထားတဲ့ CSS ကို Tailwind class အဖြစ် ပြောင်းလဲခြင်း */
+@utility
+ title-animated {
+  @apply relative flex items-center pl-[30px] text-[28px] font-semibold tracking-[-1px] text-[#00bfff];
+
+  &::before,
+  &::after {
+    @apply absolute left-0 content-[''] h-4 w-4 rounded-full bg-[#00bfff];
+  }
+
+  &::after {
+    animation: custom-pulse 1s linear infinite;
+  }
+}
