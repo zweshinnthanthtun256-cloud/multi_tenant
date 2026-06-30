@@ -71,7 +71,7 @@ class AdminController extends Controller
         $registration = RegistrationRequest::findOrFail($id);
 
         // Generate default password
-        $plainPassword = 'Welcome@123';
+        $plainPassword = 'password123';
 
         // Update registration status
         $registration->update([

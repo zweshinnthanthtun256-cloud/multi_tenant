@@ -57,6 +57,22 @@
             </a>
         </li>
 
+        <li class="nav-item">
+            <a href="{{ route('roles.index') }}" class="nav-link">
+                <i class="bi bi-calendar me-2"></i>
+                Role List
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a href="{{ route('managers.index') }}" class="nav-link">
+                <i class="bi bi-calendar me-2"></i>
+                Manager List
+            </a>
+        </li>
+
+        
+
         <div class="menu-title">COMPONENTS</div>
 
         <li class="nav-item">

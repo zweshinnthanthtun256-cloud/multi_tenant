@@ -2,7 +2,7 @@
 
 @section('content')
 
-    @include('partials.topbar')
+    
 
     @include('partials.stats')
 

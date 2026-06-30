@@ -16,7 +16,6 @@ class CompanyController extends Controller
     public function index()
     {
         $companies = Company::latest()->paginate(10);
-
         return view('companies.index', compact('companies'));
     }
 
@@ -31,104 +30,92 @@ class CompanyController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    // public function store(Request $request)
-    // {
-    //     $request->validate([
-    //         'name' => 'required',
-    //         'email' => 'required|email',
-    //         'logo' => 'required|image',
-    //     ]);
-
-    //     $logoName = null;
-
-    //     if ($request->hasFile('logo')) {
-
-    //         $logoName = time().'.'.$request->logo->extension();
-
-    //         $request->logo->move(
-    //             public_path('uploads/company'),
-    //             $logoName
-    //         );
-    //     }
-
-    //     Company::create([
-    //         'name' => $request->name,
-    //         'email' => $request->email,
-    //         'phone' => $request->phone,
-    //         'website' => $request->website,
-    //         'logo' => $logoName,
-    //         'address' => $request->address,
-    //         'description' => $request->description,
-    //         'status' => $request->status ?? 1,
-    //     ]);
-
-    //     return redirect()
-    //         ->route('companies.index')
-    //         ->with('success', 'Company Created Successfully');
-    // }
     public function store(Request $request)
-{
-    $request->validate([
-        'name' => 'required',
-        'email' => 'required|email',
-        'logo' => 'required|image',
-    ]);
+    {
+        $request->validate([
+            'name' => 'required',
+            'email' => 'required|email',
+            'logo' => 'required|image',
+        ]);
 
-    $logoName = null;
+        $logoName = null;
+        if ($request->hasFile('logo')) {
+            $logoName = time().'.'.$request->logo->extension();
+            $request->logo->move(
+                public_path('uploads/company'),
+                $logoName
+            );
+        }
 
-    if ($request->hasFile('logo')) {
-        $logoName = time().'.'.$request->logo->extension();
+        // 1. Create company DB name
+        $dbName = 'company_' . Str::slug($request->name, '_') . '_' . rand(1000,9999);
 
-        $request->logo->move(
-            public_path('uploads/company'),
-            $logoName
-        );
+        $company = Company::create([
+            'name' => $request->name,
+            'db_name' => $dbName,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'website' => $request->website,
+            'logo' => $logoName,
+            'address' => $request->address,
+            'description' => $request->description,
+            'status' => $request->status ?? 1,
+        ]);
+
+        // 2. CREATE DATABASE
+        DB::statement("CREATE DATABASE {$dbName}");
+
+        // 3. SWITCH TO TENANT DB (Config များကို လက်ရှိ Main connection ကနေ ယူသုံးတာ ပိုစိတ်ချရပါတယ်)
+        config([
+            'database.connections.tenant' => [
+                'driver' => 'mysql',
+                'host' => config('database.connections.mysql.host'),
+                'port' => config('database.connections.mysql.port'),
+                'database' => $dbName,
+                'username' => config('database.connections.mysql.username'),
+                'password' => config('database.connections.mysql.password'),
+                'charset' => 'utf8mb4',
+                'collation' => 'utf8mb4_unicode_ci',
+            ]
+        ]);
+
+        DB::purge('tenant');
+        DB::reconnect('tenant');
+
+        // 4. RUN TENANT MIGRATIONS
+        Artisan::call('migrate', [
+            '--database' => 'tenant',
+            '--path' => 'database/migrations/tenant',
+            '--force' => true,
+        ]);
+
+        // 5. 💡 အသစ်ထည့်သွင်းချက် - Tenant DB ထဲမှာ Default Spatie Roles များကို တစ်ပါတည်း ဆောက်ပေးခြင်း
+        // ဒါမှ နောက်တစ်ဆင့်မှာ အသုံးပြုသူ ဆောက်တဲ့အခါ Role ရှာမတွေ့တဲ့ Error လုံးဝ မတက်တော့မှာ ဖြစ်ပါတယ်။
+        DB::connection('tenant')->table('roles')->insert([
+            [
+                'name' => 'Company Admin',
+                'guard_name' => 'web',
+                'created_at' => now(),
+                'updated_at' => now()
+            ],
+            [
+                'name' => 'Manager',
+                'guard_name' => 'web',
+                'created_at' => now(),
+                'updated_at' => now()
+            ],
+            [
+                'name' => 'Sales Staff',
+                'guard_name' => 'web',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]
+        ]);
+
+        return redirect()
+            ->route('companies.index')
+            ->with('success', 'Company Created with Database and Default Roles Successfully');
     }
-
-    // 1. Create company DB name
-    $dbName = 'company_' . Str::slug($request->name, '_') . '_' . rand(1000,9999);;
-
-    
-    $company = Company::create([
-        'name' => $request->name,
-        'db_name' => $dbName,
-        'email' => $request->email,
-        'phone' => $request->phone,
-        'website' => $request->website,
-        'logo' => $logoName,
-        'address' => $request->address,
-        'description' => $request->description,
-        'status' => $request->status ?? 1,
-    ]);
-
-    // 3. CREATE DATABASE
-    DB::statement("CREATE DATABASE {$dbName}");
-
-    // 4. SWITCH TO TENANT DB
-    config([
-        'database.connections.tenant' => [
-            'driver' => 'mysql',
-            'host' => env('DB_HOST'),
-            'database' => $dbName,
-            'username' => env('DB_USERNAME'),
-            'password' => env('DB_PASSWORD'),
-        ]
-    ]);
-
-    DB::purge('tenant');
-    DB::reconnect('tenant');
-
-    // 5. RUN TENANT MIGRATIONS
-    Artisan::call('migrate', [
-        '--database' => 'tenant',
-        '--path' => 'database/migrations/tenant',
-        '--force' => true,
-    ]);
-
-    return redirect()
-        ->route('companies.index')
-        ->with('success', 'Company Created with Database Successfully');
-}
 
     /**
      * Display the specified resource.
@@ -150,58 +137,63 @@ class CompanyController extends Controller
      * Update the specified resource in storage.
      */
     public function update(Request $request, Company $company)
-{
-    $request->validate([
-        'name' => 'required',
-        'email' => 'nullable|email',
-        'logo' => 'nullable|image',
-    ]);
+    {
+        $request->validate([
+            'name' => 'required',
+            'email' => 'nullable|email',
+            'logo' => 'nullable|image',
+        ]);
 
-    $logoName = $company->logo;
+        $logoName = $company->logo;
+        if ($request->hasFile('logo')) {
+            if ($company->logo && file_exists(public_path('uploads/company/' . $company->logo))) {
+                unlink(public_path('uploads/company/' . $company->logo));
+            }
 
-    if ($request->hasFile('logo')) {
-
-        // delete old logo safely
-        if ($company->logo && file_exists(public_path('uploads/company/' . $company->logo))) {
-            unlink(public_path('uploads/company/' . $company->logo));
+            $logoName = time().'.'.$request->logo->extension();
+            $request->logo->move(
+                public_path('uploads/company'),
+                $logoName
+            );
         }
 
-        $logoName = time().'.'.$request->logo->extension();
+        $company->update([
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'website' => $request->website,
+            'logo' => $logoName,
+            'address' => $request->address,
+            'description' => $request->description,
+            'status' => $request->status ?? 1,
+        ]);
 
-        $request->logo->move(
-            public_path('uploads/company'),
-            $logoName
-        );
+        return redirect()
+            ->route('companies.index')
+            ->with('success', 'Company Updated Successfully');
     }
-
-    // ❗ IMPORTANT: DO NOT TOUCH db_name HERE
-    // (this is your tenant database identity)
-
-    $company->update([
-        'name' => $request->name,
-        'email' => $request->email,
-        'phone' => $request->phone,
-        'website' => $request->website,
-        'logo' => $logoName,
-        'address' => $request->address,
-        'description' => $request->description,
-        'status' => $request->status ?? 1,
-    ]);
-
-    return redirect()
-        ->route('companies.index')
-        ->with('success', 'Company Updated Successfully');
-}
 
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(Company $company)
     {
+        // 💡 အသစ်ထည့်သွင်းချက် - ကုမ္ပဏီကို ဖျက်ရင် ၎င်းရဲ့ Database ကိုပါ အပြီးဖျက်ချခြင်း
+        if ($company->db_name) {
+            // SQL Injection မဖြစ်အောင် သန့်စင်ပြီးမှ သုံးပါမယ်
+            $safeDbName = preg_replace('/[^a-zA-Z0-9_]/', '', $company->db_name);
+            DB::statement("DROP DATABASE IF EXISTS {$safeDbName}");
+        }
+
+        // Logo ပုံပါ ဖျက်ပေးမယ်
+        if ($company->logo && file_exists(public_path('uploads/company/' . $company->logo))) {
+            unlink(public_path('uploads/company/' . $company->logo));
+        }
+
         $company->delete();
 
         return redirect()
             ->route('companies.index')
-            ->with('success', 'Company Deleted Successfully');
+            ->with('success', 'Company and its Database Deleted Successfully');
     }
 }

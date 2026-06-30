@@ -34,7 +34,9 @@
                     <tr class="text-muted">
                         <th>#</th>
                         <th>Name</th>
+                        <th>Username</th>
                         <th>Email</th>
+                        
                         <th>Phone</th>
                         <th>Address</th>
                         <th width="180">Action</th>

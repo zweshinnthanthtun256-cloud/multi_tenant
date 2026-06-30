@@ -29,6 +29,7 @@
                     <th>#</th>
                     <th>Logo</th>
                     <th>Company</th>
+                    
                     <th>Email</th>
                     <th>Phone</th>
                     <th>Status</th>

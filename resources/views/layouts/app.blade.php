@@ -7,13 +7,13 @@
     <title>{{ config('app.name', 'Multi-tenent SAAS') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-
+    {{-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"> --}}
+    <link rel="stylesheet" href="{{ asset('assets/bootstrap/css/bootstrap.min.css') }}">
+    {{-- <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"> --}}
+    <link rel="stylesheet" href="{{ asset('assets/bootstrap/css/bootstrap-icon.min.css') }}">
+    {{-- <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script> --}}
+    <script src="{{ asset('assets/bootstrap/js/apexcharts.min.js') }}"></script>
     <style>
 
         body{
@@ -150,12 +150,14 @@
 
 @include('partials.sidebar')
 
-<div class="main-content">
 
+
+<div class="main-content">
+    @include('partials.topbar')
     @yield('content')
 
 </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
+{{-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script> --}}
+<script src="{{ asset('assets/bootstrap/js/bootstrap.bundle.min.js')}}"></script>
 </body>
 </html>
