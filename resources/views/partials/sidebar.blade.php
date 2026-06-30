@@ -65,9 +65,9 @@
         </li>
 
         <li class="nav-item">
-            <a href="{{ route('managers.index') }}" class="nav-link">
+            <a href="{{ route('company_admin.employees.index') }}" class="nav-link">
                 <i class="bi bi-calendar me-2"></i>
-                Manager List
+                Employee List
             </a>
         </li>
 

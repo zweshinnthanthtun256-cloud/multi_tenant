@@ -4,9 +4,10 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\CompanyOwnerController;
-use App\Http\Controllers\ManagerController;
+use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\RoleController;
 use Illuminate\Support\Facades\Route;
+
 Route::get('/', [ClientController::class,'index'])->name('home');
 Route::get('/register',[ClientController::class,'register'])->name('register');
 Route::post('/register', [ClientController::class, 'registerSubmit'])
@@ -32,10 +33,18 @@ Route::get('/dashboard', [ClientController::class, 'ownerDashboard']);
 
 Route::resource('roles',RoleController::class);
 
-Route::resource('managers',ManagerController::class);
+// Route::resource('managers',ManagerController::class);
 // Route::middleware(['auth', 'tenant'])->group(function () {
 //     Route::resource('owners', CompanyOwnerController::class);
 // });
 
+
+Route::prefix('company-admin')->name('company_admin.')->middleware(['auth', 'role:Company Admin'])->group(function () {
+
+        Route::resource('employees', EmployeeController::class);
+
+        Route::get('employees/{employee}/status',[EmployeeController::class, 'changeStatus'])->name('employees.status');
+
+    });
 
 
