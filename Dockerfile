@@ -19,7 +19,7 @@ RUN apt-get update \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j"$(nproc)" bcmath gd mbstring opcache pcntl pdo_mysql pdo_pgsql zip \
     && a2enmod headers rewrite \
-    && sed -ri 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf \
+    && sed -ri 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/*.conf \
     && sed -ri 's!AllowOverride None!AllowOverride All!g' /etc/apache2/apache2.conf \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /var/www/html
