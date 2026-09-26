@@ -1,0 +1,4 @@
+@extends('layouts.auth') @section('title','Set your password')
+@section('content')<div class="eyebrow">SECURE YOUR ACCOUNT</div><h1>Set your password</h1><p>Use at least 12 characters, with uppercase, lowercase and a number.</p><form method="POST" action="{{ route('password.update') }}">@csrf<input type="hidden" name="token" value="{{ $token }}">
+<div class="field"><label class="form-label" for="email">Account email</label><input class="form-control" id="email" name="email" type="email" value="{{ old('email',request('email')) }}" required></div>
+@foreach(['password'=>'New password','password_confirmation'=>'Confirm password'] as $name=>$label)<div class="field"><label class="form-label" for="{{ $name }}">{{ $label }}</label><input class="form-control" id="{{ $name }}" name="{{ $name }}" type="password" autocomplete="new-password" required minlength="12"></div>@endforeach<button class="btn btn-primary">Save password</button></form>@endsection

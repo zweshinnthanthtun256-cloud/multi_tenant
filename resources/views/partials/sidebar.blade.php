@@ -1,101 +1,17 @@
-<div class="sidebar p-4">
-
-    <div class="logo mb-5 flex items-center gap-3">
-    
-    <div class="relative">
-        <img 
-            src="{{ asset('images/SAAScon.png') }}" 
-            alt="SAAScon"
-            class="h-18 w-30 rounded-2xl object-cover shadow-lg border border-gray-200"
-        >
-
-        <!-- optional online/glow dot -->
-        <span class="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500 border-2 border-white"></span>
-    </div>
-
-    <div>
-        <h4 class="text-2xl font-bold tracking-wide text-gray-800">
-            CoreFlow Dashboard
-        </h4>
-
-        
-    </div>
-
-</div>
-
-    <ul class="nav flex-column">
-
-        <li class="nav-item">
-            <a href="{{ url('/admin/dashboard') }}"
-   class="nav-link {{ request()->is('admin/dashboard') ? 'active' : '' }}">
-                <i class="bi bi-house-door me-2"></i>
-                Dashboard
-            </a>
-        </li>
-
-        <div class="menu-title">APPLICATIONS</div>
-
-        <li class="nav-item">
-            <a href="{{ route('companies.index') }}"
-   class="nav-link {{ request()->routeIs('companies.*') ? 'active' : '' }}">
-                <i class="bi bi-ticket me-2"></i>
-                Company List
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a href="{{ route('owners.index') }}" class="nav-link">
-                <i class="bi bi-chat-left-text me-2"></i>
-                Owner List
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a href="{{ route('registrations.index') }}" class="nav-link">
-                <i class="bi bi-calendar me-2"></i>
-                Register List
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a href="{{ route('roles.index') }}" class="nav-link">
-                <i class="bi bi-calendar me-2"></i>
-                Role List
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a href="{{ route('company_admin.employees.index') }}" class="nav-link">
-                <i class="bi bi-calendar me-2"></i>
-                Employee List
-            </a>
-        </li>
-
-        
-
-        <div class="menu-title">COMPONENTS</div>
-
-        <li class="nav-item">
-            <a href="#" class="nav-link">
-                <i class="bi bi-file-earmark-text me-2"></i>
-                Forms
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a href="#" class="nav-link">
-                <i class="bi bi-table me-2"></i>
-                Tables
-            </a>
-        </li>
-
-        <li class="nav-item">
-            <a href="#" class="nav-link">
-                <i class="bi bi-bar-chart me-2"></i>
-                Charts
-            </a>
-        </li>
-
-    </ul>
-
-</div>
+<aside class="sidebar" id="workspace-nav">
+<a class="brand" href="{{ route('dashboard') }}"><span class="brand-mark"><i class="bi bi-intersect"></i></span>CoreFlow<span style="font-size:10px;color:#8badb6;align-self:end;margin-bottom:4px">CRM</span></a>
+<div class="nav-caption">WORKSPACE</div><nav aria-label="Main navigation">
+@php
+$items = auth()->user()->hasRole('Super Admin') ? [
+['admin.dashboard','grid-1x2','Overview'],['admin.companies.index','buildings','Companies'],['admin.owners.index','person-badge','Owners'],
+['admin.employees.index','people','Team members'],['admin.registrations.index','inbox','Requests'],['admin.billing','receipt','Billing'],
+['admin.roles.index','shield-check','Roles'],['admin.activity_logs.index','clock-history','Activity']
+] : [
+['crm.dashboard','grid-1x2','Overview'],['crm.contacts','person-lines-fill','Contacts'],['crm.deals','kanban','Pipeline'],
+['crm.tasks','check2-square','Tasks'],['crm.ai','stars','AI assistant'],['billing.index','receipt','Plan & billing'],
+['workspace.settings','gear','Workspace settings']
+];
+@endphp
+@foreach($items as [$route,$icon,$label])<a href="{{ route($route) }}" class="{{ request()->routeIs($route) ? 'active' : '' }}" @if(request()->routeIs($route))aria-current="page"@endif><i class="bi bi-{{ $icon }}"></i>{{ $label }}</a>@endforeach
+@role('Company Admin')<div class="nav-caption">PEOPLE</div><a href="{{ route('company_admin.employees.index') }}"><i class="bi bi-people"></i>Team members</a><a href="{{ route('company_admin.invitations.create') }}"><i class="bi bi-person-plus"></i>Invitations</a>@endrole
+</nav><div class="sidebar-foot"><div class="workspace-chip"><i class="bi bi-building me-2"></i>{{ auth()->user()->company?->name ?? 'Platform administration' }}</div>One workspace. Better relationships.</div></aside>

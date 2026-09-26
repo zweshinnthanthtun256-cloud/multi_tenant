@@ -1,0 +1,56 @@
+name: Application checks
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        database: [sqlite, mysql, pgsql]
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: crm_test
+          MYSQL_ROOT_PASSWORD: testing-only
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -ptesting-only"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: crm_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: testing-only
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd="pg_isready -U postgres -d crm_test"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo_sqlite, sqlite3, pdo_mysql, pdo_pgsql, fileinfo
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: composer install --no-interaction --prefer-dist
+      - run: npm ci
+      - run: npm run build
+      - name: Test fresh schema and workflows
+        env:
+          APP_ENV: testing
+          APP_KEY: base64:MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTI=
+          DB_CONNECTION: ${{ matrix.database }}
+          DB_DATABASE: ${{ matrix.database == 'sqlite' && ':memory:' || 'crm_test' }}
+          DB_HOST: 127.0.0.1
+          DB_PORT: ${{ matrix.database == 'pgsql' && '5432' || '3306' }}
+          DB_USERNAME: ${{ matrix.database == 'pgsql' && 'postgres' || 'root' }}
+          DB_PASSWORD: testing-only
+        run: php vendor/bin/phpunit
+      - run: php artisan route:list --except-vendor
+      - run: composer audit
+      - run: npm audit --omit=dev

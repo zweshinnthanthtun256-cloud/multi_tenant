@@ -6,7 +6,7 @@
 
     <h4>Create Role</h4>
 
-    <form method="POST" action="{{ route('roles.store') }}">
+    <form method="POST" action="{{ route('admin.roles.store') }}">
         @csrf
 
         <div class="mb-3">
@@ -18,7 +18,7 @@
             Save
         </button>
 
-        <a href="{{ route('roles.index') }}" class="btn btn-secondary">
+        <a href="{{ route('admin.roles.index') }}" class="btn btn-secondary">
             Back
         </a>
     </form>

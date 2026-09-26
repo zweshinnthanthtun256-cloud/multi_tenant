@@ -8,7 +8,7 @@
         <small class="text-muted">Update company information</small>
     </div>
 
-    <a href="{{ route('companies.index') }}" class="btn btn-outline-secondary rounded-pill px-4">
+    <a href="{{ route('admin.companies.index') }}" class="btn btn-outline-secondary rounded-pill px-4">
         <i class="bi bi-arrow-left me-1"></i> Back
     </a>
 </div>
@@ -26,7 +26,7 @@
 <div class="card border-0 shadow-sm rounded-4">
     <div class="card-body p-4">
 
-        <form action="{{ route('companies.update', $company->id) }}"
+        <form action="{{ route('admin.companies.update', $company->id) }}"
               method="POST"
               enctype="multipart/form-data">
 

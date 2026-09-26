@@ -2,198 +2,113 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\ActivityLogger;
 use App\Models\Company;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Validation\Rule;
 
 class CompanyController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        $companies = Company::latest()->paginate(10);
+        $companies = Company::withTrashed()->latest()->paginate(15);
+
         return view('companies.index', compact('companies'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        return view('companies.create');
+        return view('companies.form', ['company' => new Company]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        $request->validate([
-            'name' => 'required',
-            'email' => 'required|email',
-            'logo' => 'required|image',
-        ]);
-
-        $logoName = null;
-        if ($request->hasFile('logo')) {
-            $logoName = time().'.'.$request->logo->extension();
-            $request->logo->move(
-                public_path('uploads/company'),
-                $logoName
-            );
-        }
-
-        // 1. Create company DB name
-        $dbName = 'company_' . Str::slug($request->name, '_') . '_' . rand(1000,9999);
-
-        $company = Company::create([
-            'name' => $request->name,
-            'db_name' => $dbName,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'website' => $request->website,
-            'logo' => $logoName,
-            'address' => $request->address,
-            'description' => $request->description,
-            'status' => $request->status ?? 1,
-        ]);
-
-        // 2. CREATE DATABASE
-        DB::statement("CREATE DATABASE {$dbName}");
-
-        // 3. SWITCH TO TENANT DB (Config များကို လက်ရှိ Main connection ကနေ ယူသုံးတာ ပိုစိတ်ချရပါတယ်)
-        config([
-            'database.connections.tenant' => [
-                'driver' => 'mysql',
-                'host' => config('database.connections.mysql.host'),
-                'port' => config('database.connections.mysql.port'),
-                'database' => $dbName,
-                'username' => config('database.connections.mysql.username'),
-                'password' => config('database.connections.mysql.password'),
-                'charset' => 'utf8mb4',
-                'collation' => 'utf8mb4_unicode_ci',
-            ]
-        ]);
-
-        DB::purge('tenant');
-        DB::reconnect('tenant');
-
-        // 4. RUN TENANT MIGRATIONS
-        Artisan::call('migrate', [
-            '--database' => 'tenant',
-            '--path' => 'database/migrations/tenant',
-            '--force' => true,
-        ]);
-
-        // 5. 💡 အသစ်ထည့်သွင်းချက် - Tenant DB ထဲမှာ Default Spatie Roles များကို တစ်ပါတည်း ဆောက်ပေးခြင်း
-        // ဒါမှ နောက်တစ်ဆင့်မှာ အသုံးပြုသူ ဆောက်တဲ့အခါ Role ရှာမတွေ့တဲ့ Error လုံးဝ မတက်တော့မှာ ဖြစ်ပါတယ်။
-        DB::connection('tenant')->table('roles')->insert([
-            [
-                'name' => 'Company Admin',
-                'guard_name' => 'web',
-                'created_at' => now(),
-                'updated_at' => now()
-            ],
-            [
-                'name' => 'Manager',
-                'guard_name' => 'web',
-                'created_at' => now(),
-                'updated_at' => now()
-            ],
-            [
-                'name' => 'Sales Staff',
-                'guard_name' => 'web',
-                'created_at' => now(),
-                'updated_at' => now()
-            ]
-        ]);
-
-        return redirect()
-            ->route('companies.index')
-            ->with('success', 'Company Created with Database and Default Roles Successfully');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Company $company)
-    {
-        return view('companies.show', compact('company'));
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Company $company)
     {
-        return view('companies.edit', compact('company'));
+        return view('companies.form', compact('company'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Company $company)
+    private function data(Request $r, ?Company $company = null): array
     {
-        $request->validate([
-            'name' => 'required',
-            'email' => 'nullable|email',
-            'logo' => 'nullable|image',
+        return $r->validate([
+            'name' => ['required', 'string', 'max:120', Rule::unique('companies')->ignore($company?->id)],
+            'email' => ['required', 'email', 'max:255', Rule::unique('companies')->ignore($company?->id)],
+            'phone' => 'nullable|string|max:30', 'website' => 'nullable|url|max:255', 'address' => 'nullable|string|max:500',
+            'description' => 'nullable|string|max:2000', 'status' => 'required|in:0,1', 'logo' => 'nullable|image|max:2048',
         ]);
-
-        $logoName = $company->logo;
-        if ($request->hasFile('logo')) {
-            if ($company->logo && file_exists(public_path('uploads/company/' . $company->logo))) {
-                unlink(public_path('uploads/company/' . $company->logo));
-            }
-
-            $logoName = time().'.'.$request->logo->extension();
-            $request->logo->move(
-                public_path('uploads/company'),
-                $logoName
-            );
-        }
-
-        $company->update([
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'website' => $request->website,
-            'logo' => $logoName,
-            'address' => $request->address,
-            'description' => $request->description,
-            'status' => $request->status ?? 1,
-        ]);
-
-        return redirect()
-            ->route('companies.index')
-            ->with('success', 'Company Updated Successfully');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+    private function logo(Request $r): ?string
+    {
+        if (! $r->hasFile('logo')) {
+            return null;
+        }
+        $name = Str::uuid().'.'.$r->file('logo')->extension();
+        $r->file('logo')->move(public_path('uploads/company'), $name);
+
+        return $name;
+    }
+
+    public function store(Request $r)
+    {
+        $data = $this->data($r);
+        unset($data['logo']);
+        $data['phone'] ??= '';
+        $data['address'] ??= '';
+        $data['description'] ??= '';
+        $company = Company::create($data + ['logo' => $this->logo($r), 'db_name' => 'shared_'.Str::uuid(), 'trial_ends_at' => now()->addDays(14)]);
+        ActivityLogger::log('Company created', 'Company #'.$company->id, $company->id);
+
+        return redirect()->route('admin.companies.index')->with('success', 'Company created.');
+    }
+
+    public function update(Request $r, Company $company)
+    {
+        $data = $this->data($r, $company);
+        unset($data['logo']);
+        $data['phone'] ??= '';
+        $data['address'] ??= '';
+        $data['description'] ??= '';
+        if ($r->hasFile('logo')) {
+            $data['logo'] = $this->logo($r);
+        }
+        $company->update($data);
+        ActivityLogger::log('Company updated', 'Company #'.$company->id, $company->id);
+
+        return redirect()->route('admin.companies.index')->with('success', 'Company updated.');
+    }
+
+    public function show(Company $company)
+    {
+        $owners = User::where('company_id', $company->id)->role('Company Admin')->with('owner')->get();
+        $managers = User::where('company_id', $company->id)->role('Manager')->get();
+        $staffs = User::where('company_id', $company->id)->role('Staff')->get();
+        $employeeCount = $owners->count() + $managers->count() + $staffs->count();
+
+        return view('companies.show', compact('company', 'owners', 'managers', 'staffs', 'employeeCount'));
+    }
+
     public function destroy(Company $company)
     {
-        // 💡 အသစ်ထည့်သွင်းချက် - ကုမ္ပဏီကို ဖျက်ရင် ၎င်းရဲ့ Database ကိုပါ အပြီးဖျက်ချခြင်း
-        if ($company->db_name) {
-            // SQL Injection မဖြစ်အောင် သန့်စင်ပြီးမှ သုံးပါမယ်
-            $safeDbName = preg_replace('/[^a-zA-Z0-9_]/', '', $company->db_name);
-            DB::statement("DROP DATABASE IF EXISTS {$safeDbName}");
-        }
+        DB::transaction(function () use ($company) {
+            $company->update(['status' => 0]);
+            $company->delete();
+            ActivityLogger::log('Company archived', 'Company #'.$company->id.'; data retained', $company->id);
+        });
 
-        // Logo ပုံပါ ဖျက်ပေးမယ်
-        if ($company->logo && file_exists(public_path('uploads/company/' . $company->logo))) {
-            unlink(public_path('uploads/company/' . $company->logo));
-        }
+        return back()->with('success', 'Company archived. Data retained and access blocked.');
+    }
 
-        $company->delete();
+    public function restore(int $id)
+    {
+        DB::transaction(function () use ($id) {
+            $company = Company::onlyTrashed()->lockForUpdate()->findOrFail($id);
+            $company->restore();
+            $company->update(['status' => 1]);
+            ActivityLogger::log('Company restored', 'Company #'.$company->id, $company->id);
+        });
 
-        return redirect()
-            ->route('companies.index')
-            ->with('success', 'Company and its Database Deleted Successfully');
+        return back()->with('success', 'Company restored.');
     }
 }

@@ -1,0 +1,2 @@
+@extends('layouts.auth') @section('title','Verify your email')
+@section('content')<div class="eyebrow">ONE MORE STEP</div><h1>Verify your email</h1><p>Verify {{ auth()->user()->email }} before entering your workspace. Use the button below to send a fresh link.</p><form method="POST" action="{{ route('verification.send') }}">@csrf<button class="btn btn-primary">Send verification email</button></form><form method="POST" action="{{ route('logout') }}" class="mt-3">@csrf<button class="btn btn-link">Sign out</button></form>@endsection

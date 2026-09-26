@@ -1,0 +1,20 @@
+#!/bin/sh
+set -eu
+
+APP_PORT="${PORT:-10000}"
+sed -ri "s/^Listen [0-9]+/Listen ${APP_PORT}/" /etc/apache2/ports.conf
+sed -ri "s/<VirtualHost \*:[0-9]+>/<VirtualHost *:${APP_PORT}>/" /etc/apache2/sites-available/*.conf
+
+mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs
+chown -R www-data:www-data storage bootstrap/cache
+
+php artisan migrate --force
+if [ "${DEMO_MODE:-false}" = "true" ]; then
+    php artisan db:seed --class=DemoSeeder --force
+fi
+php artisan optimize
+
+php artisan queue:work --tries=3 --backoff=60 --timeout=90 --sleep=3 &
+php artisan schedule:work &
+
+exec apache2-foreground

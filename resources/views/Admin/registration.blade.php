@@ -76,7 +76,7 @@
 
                     <td>
 
-                        <form action="{{ route('registrations.approve', $registration->id) }}"
+                        <form action="{{ route('admin.registrations.approve', $registration->id) }}"
                               method="POST"
                               class="d-inline">
                             @csrf
@@ -87,7 +87,7 @@
                             </button>
                         </form>
 
-                        <form action="{{ route('registrations.reject', $registration->id) }}"
+                        <form action="{{ route('admin.registrations.reject', $registration->id) }}"
                               method="POST"
                               class="d-inline">
                             @csrf

@@ -6,7 +6,7 @@
 
     <h4>Edit Role</h4>
 
-    <form method="POST" action="{{ route('roles.update', $role->id) }}">
+    <form method="POST" action="{{ route('admin.roles.update', $role->id) }}">
         @csrf
         @method('PUT')
 
@@ -20,7 +20,7 @@
             Update
         </button>
 
-        <a href="{{ route('roles.index') }}" class="btn btn-secondary">
+        <a href="{{ route('admin.roles.index') }}" class="btn btn-secondary">
             Back
         </a>
     </form>

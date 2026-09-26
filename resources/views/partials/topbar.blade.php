@@ -13,7 +13,7 @@
         <div class="user-box d-flex align-items-center gap-3">
 
             <!-- Notification -->
-            <a href="{{ route('registrations.index') }}" class="position-relative text-dark">
+            <a href="{{ route('admin.registrations.index') }}" class="position-relative text-dark">
 
                 <i class="bi bi-bell fs-5"></i>
 

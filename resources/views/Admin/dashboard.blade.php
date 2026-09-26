@@ -1,19 +1,4 @@
-@extends('layouts.app')
-
-@section('content')
-
-    
-
-    @include('partials.stats')
-
-    <div class="row g-4">
-
-        @include('partials.sales-chart')
-
-        @include('partials.income-chart')
-
-        @include('partials.location')
-
-    </div>
-
-@endsection
+@extends('layouts.app') @section('title','Platform overview')
+@section('content')<div class="page-heading"><div><div class="eyebrow">PLATFORM ADMINISTRATION</div><h1>A clear view of your platform</h1><p>Workspace health, onboarding and the people you support.</p></div><a href="{{ route('admin.registrations.index') }}" class="btn btn-primary">Review requests <i class="bi bi-arrow-right ms-2"></i></a></div>
+<div class="metrics">@foreach([['Companies',$totalCompanies,'Registered workspaces'],['Active workspaces',$activeCompanies,'Companies with active access'],['Company owners',$companyAdmins,'Workspace administrators'],['Team members',$employees,'Managers and staff']] as [$label,$value,$note])<div class="metric"><div class="metric-label">{{ $label }}</div><div class="metric-value">{{ $value }}</div><div class="metric-note">{{ $note }}</div></div>@endforeach</div>
+<div class="dashboard-grid"><section class="panel"><h2 class="mb-4">Onboarding queue</h2>@foreach([['Pending review',$pendingRequests],['Approved',$approvedRequests],['Rejected',$rejectedRequests]] as [$label,$value])<div class="task-row"><strong>{{ $label }}</strong><span class="badge">{{ $value }}</span></div>@endforeach<a class="btn btn-outline-secondary mt-4" href="{{ route('admin.registrations.index') }}">Open requests</a></section><section class="panel"><h2 class="mb-4">Manage your platform</h2><div class="task-row"><a href="{{ route('admin.companies.index') }}">Companies & access</a><i class="bi bi-arrow-up-right"></i></div><div class="task-row"><a href="{{ route('admin.billing') }}">Invoices & payment verification</a><i class="bi bi-arrow-up-right"></i></div><div class="task-row"><a href="{{ route('admin.activity_logs.index') }}">Activity history</a><i class="bi bi-arrow-up-right"></i></div><p class="muted mt-4">Archived company data is retained. Restore a company from the company management screen when appropriate.</p></section></div>@endsection

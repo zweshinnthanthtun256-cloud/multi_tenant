@@ -3,78 +3,56 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    private function editable(Role $role): void
+    {
+        abort_if(in_array($role->name, ['Super Admin', 'Company Admin', 'Manager', 'Staff']), 422, 'Built-in access roles cannot be changed.');
+    }
+
     public function index()
     {
         $roles = Role::latest()->get();
-        return view('roles.index',compact('roles'));
+
+        return view('roles.index', compact('roles'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         return view('roles.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        $request->validate([
-            'name'=>'required|unique:roles,name',
-        ]);
-
-        Role::create(['name'=>$request->name]);
-        return redirect()->route('roles.index')->with('success','Role created successfully');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Role $role)
     {
-        return view('roles.edit',compact('roles'));
+        $this->editable($role);
+
+        return view('roles.edit', compact('role'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Role $role)
+    public function store(Request $r)
     {
-        $request->validate([
-            'name'=>'required|unique:roles,name' . $role->id,
-        ]);
+        $data = $r->validate(['name' => 'required|string|max:100|unique:roles,name']);
+        Role::create($data + ['guard_name' => 'web']);
 
-        $role->update(['name'=>$request->name]);
-        return redirect()->route('roles.index')
-            ->with('success', 'Role updated successfully');
+        return redirect()->route('admin.roles.index')->with('success', 'Role created.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+    public function update(Request $r, Role $role)
+    {
+        $this->editable($role);
+        $role->update($r->validate(['name' => ['required', 'string', 'max:100', Rule::unique('roles')->ignore($role->id)]]));
+
+        return redirect()->route('admin.roles.index')->with('success', 'Role updated.');
+    }
+
     public function destroy(Role $role)
     {
+        $this->editable($role);
         $role->delete();
 
-        return redirect()->route('roles.index')
-            ->with('success', 'Role deleted successfully');
+        return redirect()->route('admin.roles.index')->with('success', 'Role removed.');
     }
 }

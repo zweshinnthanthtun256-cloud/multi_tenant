@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Routing\Controllers\HasMiddleware; 
 use App\Http\Middleware\TenantIdentification;
+use Illuminate\Routing\Controllers\HasMiddleware;
 
 class TenantBaseController extends Controller implements HasMiddleware
 {
@@ -14,8 +13,7 @@ class TenantBaseController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            'auth', // ပုံမှန် Auth စစ်မည်
-            TenantIdentification::class, // မိမိတို့ဆောက်ထားသော Tenant ပြောင်းပေးမည့် Middleware ခေါ်မည်
+            'auth', TenantIdentification::class,
         ];
     }
 }

@@ -1,58 +1,39 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# CoreFlow CRM
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel 13 / Blade CRM for company workspaces, with a responsive Bootstrap-based interface.
 
-## About Laravel
+## Included
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Shared-database company isolation; separate platform and company administration.
+- Active-account checks, login throttling, password reset, email verification and session authentication.
+- Registration approval, secure single-use team invitations, seat limits and role-based actions.
+- Contacts and leads, opportunity stages, assignments, notes, follow-up tasks and reminders.
+- Validated CSV import/export and workspace CRM export.
+- Manual invoices, customer-submitted transfer references, administrator verification, bounded trial/paid access and renewal cancellation. This path requires no payment gateway subscription; banks may charge transfer fees.
+- Optional OpenAI summaries and follow-up drafts with company consent, quotas and human review.
+- Reversible company archiving, audit activity, private database snapshots and Linux CI.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Run locally
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Use PHP 8.4+ and Node 22.12+. Install locked dependencies with Composer and npm. Copy .env.example for a new installation, configure the database and mail, and generate an application key only for a new installation. Then migrate, seed roles/your configured administrator, and build assets.
 
-## Learning Laravel
+On the provided Windows machine:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+    ./scripts/php.ps1 artisan migrate
+    ./scripts/php.ps1 artisan db:seed
+    ./scripts/php.ps1 vendor/bin/phpunit
+    npm run build
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+The helper uses the installed PHP 8.4 runtime without changing system PATH. For the development web server, ensure SQLite extensions are enabled in php.ini if using SQLite: Artisan's child server does not inherit command-line extension flags. Use MySQL for a production deployment and validate the CI MySQL job before release.
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+Initial admin creation requires INITIAL_ADMIN_EMAIL and INITIAL_ADMIN_PASSWORD; there is no default password. Configure a working mail transport to verify the account. A log mailer is for local development only.
 
-## Agentic Development
+## Upgrade and deployment
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+Read [operations and migration instructions](docs/OPERATIONS.md) before applying migrations to an existing database. Existing tenant databases are retained, not imported or deleted. There is no automated card charging, external deployment, live API configuration or managed offsite backup implied by this repository.
 
-```bash
-composer require laravel/boost --dev
+AI remains disabled until configured globally and enabled by each company owner. Tests use a fake API and do not spend API credits.
 
-php artisan boost:install
-```
+## Verification
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Run the feature suite with PHP 8.4 and SQLite extensions. CI additionally defines a MySQL 8.4 test job. Browser verification uses a separate local database containing fictional records; it does not alter the configured customer database.

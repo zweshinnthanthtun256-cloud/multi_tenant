@@ -8,7 +8,7 @@
             <small class="text-muted">View company owner information</small>
         </div>
 
-        <a href="{{ route('owners.index') }}" class="btn btn-secondary rounded-pill px-4">
+        <a href="{{ route('admin.owners.index') }}" class="btn btn-secondary rounded-pill px-4">
             Back
         </a>
     </div>
@@ -47,11 +47,11 @@
 
         <div class="mt-3 d-flex gap-2">
 
-            <a href="{{ route('owners.edit', $owner->id) }}" class="btn btn-warning rounded-pill px-4">
+            <a href="{{ route('admin.owners.edit', $owner->id) }}" class="btn btn-warning rounded-pill px-4">
                 Edit
             </a>
 
-            <form action="{{ route('owners.destroy', $owner->id) }}" method="POST"
+            <form action="{{ route('admin.owners.destroy', $owner->id) }}" method="POST"
                 onsubmit="return confirm('Are you sure?')">
 
                 @csrf

@@ -15,18 +15,18 @@
         </div>
     @endif
 
-    <form action="{{ route('company_admin.employees.update', $employee->id) }}" method="POST">
+    <form action="{{ route('admin.employees.update', $employee->id) }}" method="POST">
         @csrf
         @method('PUT')
 
         <div class="mb-2">
             <label>Name</label>
-            <input type="text" name="name" value="{{ $employee->name }}" class="form-control">
+            <input type="text" name="name" value="{{ $employee->user->name }}" class="form-control">
         </div>
 
         <div class="mb-2">
             <label>Email</label>
-            <input type="email" name="email" value="{{ $employee->email }}" class="form-control">
+            <input type="email" name="email" value="{{ $employee->user->email }}" class="form-control">
         </div>
 
         <div class="mb-2">
@@ -34,7 +34,7 @@
             <select name="role" class="form-control">
                 @foreach($roles as $role)
                     <option value="{{ $role->name }}"
-                        {{ $employee->getRoleNames()->first() == $role->name ? 'selected' : '' }}>
+                        {{ $employee->user->getRoleNames()->first() == $role->name ? 'selected' : '' }}>
                         {{ $role->name }}
                     </option>
                 @endforeach
@@ -56,7 +56,7 @@
             <select name="status" class="form-control">
                 <option value="active" {{ $employee->status == 'active' ? 'selected' : '' }}>Active</option>
                 <option value="inactive" {{ $employee->status == 'inactive' ? 'selected' : '' }}>Inactive</option>
-                <option value="suspended" {{ $employee->status == 'suspended' ? 'selected' : '' }}>Suspended</option>
+                <option value="suspended" {{ $employee->status == 'pending' ? 'selected' : '' }}>Pending</option>
             </select>
         </div>
 

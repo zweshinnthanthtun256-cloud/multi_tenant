@@ -15,7 +15,7 @@
         </div>
     @endif
 
-    <form action="{{ route('company_admin.employees.store') }}" method="POST">
+    <form action="{{ route('admin.employees.store') }}" method="POST">
         @csrf
 
         <div class="mb-2">

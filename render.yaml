@@ -1,0 +1,51 @@
+services:
+  - type: web
+    name: coreflow-crm-demo
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /up
+    autoDeploy: false
+    envVars:
+      - key: APP_NAME
+        value: CoreFlow CRM Demo
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_URL
+        value: https://coreflow-crm-demo.onrender.com
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: LOG_LEVEL
+        value: warning
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        sync: false
+      - key: DB_SSLMODE
+        value: require
+      - key: SESSION_DRIVER
+        value: database
+      - key: SESSION_SECURE_COOKIE
+        value: "true"
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: CACHE_STORE
+        value: database
+      - key: MAIL_MAILER
+        value: log
+      - key: SUPPORT_EMAIL
+        value: demo@coreflow.test
+      - key: AI_ENABLED
+        value: "false"
+      - key: BILLING_PAYMENT_INSTRUCTIONS
+        value: Demo only — use fictional transfer references. No money is collected.
+      - key: DEMO_MODE
+        value: "true"
+      - key: DEMO_USER_EMAIL
+        value: demo@coreflow.test
+      - key: DEMO_USER_PASSWORD
+        value: CoreFlowDemo2026!

@@ -6,7 +6,7 @@
 
     <div class="d-flex justify-content-between mb-3">
         <h4>Roles</h4>
-        <a href="{{ route('roles.create') }}" class="btn btn-primary btn-sm">
+        <a href="{{ route('admin.roles.create') }}" class="btn btn-primary btn-sm">
             + Add Role
         </a>
     </div>
@@ -32,11 +32,11 @@
                     <td>{{ $loop->iteration }}</td>
                     <td>{{ $role->name }}</td>
                     <td>
-                        <a href="{{ route('roles.edit', $role->id) }}" class="btn btn-warning btn-sm">
+                        <a href="{{ route('admin.roles.edit', $role->id) }}" class="btn btn-warning btn-sm">
                             Edit
                         </a>
 
-                        <form action="{{ route('roles.destroy', $role->id) }}" method="POST" style="display:inline-block;">
+                        <form action="{{ route('admin.roles.destroy', $role->id) }}" method="POST" style="display:inline-block;">
                             @csrf
                             @method('DELETE')
 

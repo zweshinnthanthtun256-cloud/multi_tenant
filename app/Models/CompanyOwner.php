@@ -6,20 +6,22 @@ use Illuminate\Database\Eloquent\Model;
 
 class CompanyOwner extends Model
 {
-    
     protected $fillable = [
         'name',
         'email',
         'phone',
         'address',
-        'company_id'
+        'company_id',
+        'user_id',
     ];
+
     public function company()
-{
-    return $this->belongsTo(Company::class);
-}
-public function user()
-{
-    return $this->belongsTo(User::class);
-}
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }

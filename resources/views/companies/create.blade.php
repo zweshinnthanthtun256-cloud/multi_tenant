@@ -8,7 +8,7 @@
         <small class="text-muted">Create a new company record</small>
     </div>
 
-    <a href="{{ route('companies.index') }}" class="btn btn-outline-secondary rounded-pill px-4">
+    <a href="{{ route('admin.companies.index') }}" class="btn btn-outline-secondary rounded-pill px-4">
         <i class="bi bi-arrow-left me-1"></i> Back
     </a>
 </div>
@@ -26,7 +26,7 @@
 <div class="card shadow-sm border-0 rounded-4">
     <div class="card-body p-4">
 
-        <form action="{{ route('companies.store') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('admin.companies.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
 
             <div class="row g-3">

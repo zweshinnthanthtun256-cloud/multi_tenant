@@ -2,156 +2,132 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
+use App\Helpers\ActivityLogger;
+use App\Models\Company;
+use App\Models\Employee;
 use App\Models\User;
+use App\Support\Workspace;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 use Spatie\Permission\Models\Role;
 
 class EmployeeController extends Controller
 {
-    /**
-     * LIST EMPLOYEES
-     */
-    public function index()
+    private function platform(): bool
     {
-        $employees = User::where('company_id', auth()->user()->company_id)
-            ->whereHas('roles', function ($q) {
-                $q->whereIn('name', ['Manager', 'Staff']);
-            })
-            ->latest()
-            ->paginate(10);
-
-        return view('company_admin.employees.index', compact('employees'));
+        return auth()->user()->hasRole('Super Admin');
     }
 
-    /**
-     * SHOW CREATE FORM
-     */
+    private function prefix(): string
+    {
+        return $this->platform() ? 'admin' : 'company_admin';
+    }
+
+    private function check(Employee $employee): void
+    {
+        if (! $this->platform()) {
+            Workspace::authorize($employee);
+        }
+        abort_unless($employee->user && $employee->user->hasAnyRole(['Manager', 'Staff'])
+            && ! $employee->user->hasAnyRole(['Company Admin', 'Super Admin']), 403);
+    }
+
+    public function index(Request $r)
+    {
+        $employees = Employee::with('user', 'company')->when(! $this->platform(), fn ($q) => $q->where('company_id', Workspace::id()))
+            ->when($r->filled('q'), fn ($q) => $q->whereHas('user', fn ($u) => $u->where('name', 'like', '%'.$r->string('q').'%')))
+            ->latest()->paginate(15)->withQueryString();
+        $prefix = $this->prefix();
+
+        return view('company_admin.employees.index', compact('employees', 'prefix'));
+    }
+
     public function create()
     {
-        $roles = Role::whereIn('name', ['Manager', 'Staff'])->get();
-
-        return view('company_admin.employees.create', compact('roles'));
+        return $this->form(new Employee);
     }
 
-    /**
-     * STORE EMPLOYEE
-     */
-    public function store(Request $request)
+    private function form(Employee $employee)
     {
-        $request->validate([
-            'name'     => 'required',
-            'email'    => 'required|email|unique:users,email',
-            'password' => 'required|min:6',
-            'role'     => 'required|in:Manager,Staff',
-            'phone'    => 'nullable',
-            'position' => 'nullable',
-        ]);
+        $prefix = $this->prefix();
+        $companies = $this->platform() ? Company::where('status', 1)->get() : collect();
 
-        $employee = User::create([
-            'company_id' => auth()->user()->company_id,
-            'name'       => $request->name,
-            'email'      => $request->email,
-            'password'   => Hash::make($request->password),
-            'phone'      => $request->phone,
-            'position'   => $request->position,
-            'status'     => 'active',
-        ]);
-
-        // assign role (Spatie)
-        $employee->assignRole($request->role);
-
-        return redirect()
-            ->route('company_admin.employees.index')
-            ->with('success', 'Employee created successfully');
+        return view('company_admin.employees.form', compact('employee', 'prefix', 'companies'));
     }
 
-    /**
-     * EDIT FORM
-     */
-    public function edit(User $employee)
+    public function edit(Employee $employee)
     {
-        abort_if(
-            $employee->company_id !== auth()->user()->company_id,
-            403
-        );
+        $this->check($employee);
 
-        $roles = Role::whereIn('name', ['Manager', 'Staff'])->get();
-
-        return view('company_admin.employees.edit', compact('employee', 'roles'));
+        return $this->form($employee);
     }
 
-    /**
-     * UPDATE EMPLOYEE
-     */
-    public function update(Request $request, User $employee)
+    public function store(Request $r)
     {
-        abort_if(
-            $employee->company_id !== auth()->user()->company_id,
-            403
-        );
+        $data = $r->validate(['name' => 'required|string|max:120', 'email' => 'required|email|max:255|unique:users,email',
+            'password' => ['required', 'confirmed', Password::min(12)->mixedCase()->numbers()],
+            'role' => 'required|in:Manager,Staff', 'phone' => 'nullable|string|max:30', 'position' => 'nullable|string|max:120',
+            'company_id' => $this->platform() ? 'required|exists:companies,id' : 'prohibited']);
+        $company = Company::findOrFail($this->platform() ? $data['company_id'] : Workspace::id());
+        abort_unless((int) $company->status === 1, 422);
+        $user = DB::transaction(function () use ($data, $company) {
+            Workspace::reserveSeat($company);
+            $user = User::create(['name' => $data['name'], 'email' => strtolower($data['email']), 'password' => $data['password'], 'company_id' => $company->id, 'status' => 'active']);
+            $user->assignRole(Role::findOrCreate($data['role'], 'web'));
+            $employee = Employee::create(['company_id' => $company->id, 'user_id' => $user->id, 'employee_code' => 'EMP-'.Str::uuid(),
+                'phone' => $data['phone'] ?? null, 'position' => $data['position'] ?? null, 'joining_date' => now(), 'status' => 'active']);
+            ActivityLogger::log('Employee created', 'Employee #'.$employee->id, $company->id);
 
-        $request->validate([
-            'name'     => 'required',
-            'email'    => 'required|email|unique:users,email,' . $employee->id,
-            'role'     => 'required|in:Manager,Staff',
-            'phone'    => 'nullable',
-            'position' => 'nullable',
-            'status'   => 'required|in:active,inactive,suspended',
-        ]);
+            return $user;
+        });
+        $user->sendEmailVerificationNotification();
 
-        $employee->update([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'phone'    => $request->phone,
-            'position' => $request->position,
-            'status'   => $request->status,
-        ]);
-
-        // sync role
-        $employee->syncRoles([$request->role]);
-
-        return redirect()
-            ->route('company_admin.employees.index')
-            ->with('success', 'Employee updated successfully');
+        return redirect()->route($this->prefix().'.employees.index')->with('success', 'Team member created. Verification email sent.');
     }
 
-    /**
-     * DELETE EMPLOYEE
-     */
-    public function destroy(User $employee)
+    public function update(Request $r, Employee $employee)
     {
-        abort_if(
-            $employee->company_id !== auth()->user()->company_id,
-            403
-        );
+        $this->check($employee);
+        $data = $r->validate(['name' => 'required|string|max:120', 'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($employee->user_id)],
+            'role' => 'required|in:Manager,Staff', 'phone' => 'nullable|string|max:30', 'position' => 'nullable|string|max:120', 'status' => 'required|in:active,inactive,suspended']);
+        DB::transaction(function () use ($employee, $data) {
+            $user = $employee->user;
+            $email = strtolower($data['email']);
+            if ($user->email !== $email) {
+                $user->email_verified_at = null;
+            }
+            $user->fill(['name' => $data['name'], 'email' => $email, 'status' => $data['status']])->save();
+            $user->syncRoles([$data['role']]);
+            $employee->update(['phone' => $data['phone'] ?? null, 'position' => $data['position'] ?? null, 'status' => $data['status']]);
+            ActivityLogger::log('Employee updated', 'Employee #'.$employee->id, $employee->company_id);
+        });
 
-        $employee->delete();
-
-        return redirect()
-            ->route('company_admin.employees.index')
-            ->with('success', 'Employee deleted successfully');
+        return redirect()->route($this->prefix().'.employees.index')->with('success', 'Team member updated.');
     }
 
-    /**
-     * CHANGE STATUS (AJAX OR BUTTON)
-     */
-    public function changeStatus(User $employee)
+    public function destroy(Employee $employee)
     {
-        abort_if(
-            $employee->company_id !== auth()->user()->company_id,
-            403
-        );
+        $this->check($employee);
+        DB::transaction(function () use ($employee) {
+            ActivityLogger::log('Employee removed', 'Employee #'.$employee->id, $employee->company_id);
+            $employee->user->delete();
+        });
 
-        $employee->status = match ($employee->status) {
-            'active'   => 'inactive',
-            'inactive' => 'suspended',
-            'suspended'=> 'active',
-        };
+        return back()->with('success', 'Team member removed and access revoked.');
+    }
 
-        $employee->save();
+    public function changeStatus(Employee $employee)
+    {
+        $this->check($employee);
+        DB::transaction(function () use ($employee) {
+            $status = $employee->status === 'active' ? 'suspended' : 'active';
+            $employee->update(['status' => $status]);
+            $employee->user->update(['status' => $status]);
+        });
 
-        return back()->with('success', 'Employee status updated');
+        return back()->with('success', 'Access updated.');
     }
 }

@@ -1,0 +1,4 @@
+@extends('layouts.auth') @section('title','Accept invitation')
+@section('content')<div class="eyebrow">YOU'RE INVITED</div><h1>Join {{ $invitation->company->name }}</h1><p>Accept your {{ $invitation->role }} invitation for {{ $invitation->email }}.</p><form method="POST" action="{{ route('invitations.complete',$token) }}">@csrf
+<div class="field"><label class="form-label" for="name">Your name</label><input id="name" class="form-control" name="name" value="{{ old('name') }}" required maxlength="120"></div>
+@foreach(['password'=>'Password','password_confirmation'=>'Confirm password'] as $name=>$label)<div class="field"><label class="form-label" for="{{ $name }}">{{ $label }}</label><input id="{{ $name }}" class="form-control" name="{{ $name }}" type="password" required minlength="12"></div>@endforeach<p class="muted">Use 12+ characters with uppercase, lowercase and a number.</p><button class="btn btn-primary">Join workspace</button></form>@endsection

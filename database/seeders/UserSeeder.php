@@ -2,20 +2,26 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\User;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        $user=User::create([
-            'name' => 'Admin',
-            'email' => 'gtisrvc@gmail.com',
-            'password' => Hash::make('password123'),
-            'role_id' => '1'
-        ]);
-        $user->assignRole('Super Admin');
+        $email = env('INITIAL_ADMIN_EMAIL');
+        $password = env('INITIAL_ADMIN_PASSWORD');
+        if (! $email || ! $password) {
+            $this->command?->warn('Set INITIAL_ADMIN_EMAIL and INITIAL_ADMIN_PASSWORD to create the initial administrator.');
+
+            return;
+        }
+        if (strlen($password) < 12) {
+            throw new \RuntimeException('Initial administrator password must have at least 12 characters.');
+        }
+        $user = User::firstOrCreate(['email' => strtolower($email)], ['name' => 'Platform Admin', 'password' => Hash::make($password), 'status' => 'active']);
+        $user->assignRole(Role::findOrCreate('Super Admin', 'web'));
     }
 }

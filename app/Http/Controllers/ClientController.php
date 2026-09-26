@@ -2,67 +2,30 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Company;
 use App\Models\RegistrationRequest;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\Rule;
 
 class ClientController extends Controller
 {
     public function index()
     {
-        return view ('userpage');
+        return view('userpage');
     }
 
     public function register()
     {
         return view('register');
     }
-    public function registerSubmit(Request $request)
-{
-    $request->validate([
-        'role' => 'required',
-        'username' => 'required',
-        'email' => 'required|email',
-        'phone' => 'nullable',
-        'address' => 'nullable',
-        'company_name' => 'nullable',
-    ]);
 
-    $registration = RegistrationRequest::create([
-        'role' => $request->role,
-        'username' => $request->username,
-        'email' => $request->email,
-        'phone' => $request->phone,
-        'address' => $request->address,
-        'company_name' => $request->company_name,
-        'status' => 'pending'
-    ]);
+    public function registerSubmit(Request $r)
+    {
+        $data = $r->validate(['username' => 'required|string|max:120', 'email' => 'required|email|max:255|unique:users,email',
+            'company_name' => ['required', 'string', 'max:120', Rule::unique('companies', 'name')],
+            'phone' => 'nullable|string|max:30', 'address' => 'nullable|string|max:500']);
+        $data['email'] = strtolower($data['email']);
+        RegistrationRequest::firstOrCreate(['email' => $data['email'], 'status' => 'pending'], $data + ['role' => 'Company Admin']);
 
-    Mail::raw(
-        "New Registration Request:\n\n" .
-        "Role: {$registration->role}\n" .
-        "Username: {$registration->username}\n" .
-        "Email: {$registration->email}\n",
-        function ($message) {
-            $message->to('gtisrvc@gmail.com')
-                    ->subject('New SaaS Registration Request');
-        }
-    );
-
-    return back()->with(
-        'success',
-        'Registration submitted successfully. Waiting for approval.'
-    );
+        return back()->with('success', 'Your workspace request is ready for review. We will email your setup link after approval.');
+    }
 }
-    public function ownerDashboard()
-{
-    return view('owners.dashboard', [
-        'totalCompanies' => Company::count(),
-        'activeCompanies' => Company::where('status', 'active')->count(),
-        'pendingCompanies' => Company::where('status', 'pending')->count(),
-        'companies' => Company::latest()->get(),
-    ]);
-}
-}
-

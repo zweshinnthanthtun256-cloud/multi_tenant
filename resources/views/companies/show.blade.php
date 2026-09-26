@@ -1,51 +1,5 @@
-@extends('layouts.app')
-
-@section('content')
-
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h3 class="fw-bold">Company Profile</h3>
-
-    <a href="{{ route('companies.index') }}" class="btn btn-outline-secondary rounded-pill px-4">
-        Back
-    </a>
-</div>
-
-<div class="card border-0 shadow-sm rounded-4">
-    <div class="card-body text-center p-5">
-
-        <div class="d-flex justify-content-center mb-3">
-    <img src="{{ asset('uploads/company/'.$company->logo) }}"
-         class="rounded-circle border shadow-sm"
-         width="100"
-         height="100"
-         style="object-fit:cover;">
-</div>
-
-        <h4 class="fw-bold">{{ $company->name }}</h4>
-        <p class="text-muted">{{ $company->website }}</p>
-
-        <div class="row mt-4 text-start">
-
-            <div class="col-md-6">
-                <p><strong>Email:</strong> {{ $company->email ?? '-' }}</p>
-                <p><strong>Phone:</strong> {{ $company->phone ?? '-' }}</p>
-                <p><strong>Status:</strong>
-                    @if($company->status)
-                        <span class="badge bg-success">Active</span>
-                    @else
-                        <span class="badge bg-secondary">Inactive</span>
-                    @endif
-                </p>
-            </div>
-
-            <div class="col-md-6">
-                <p><strong>Address:</strong><br> {{ $company->address ?? '-' }}</p>
-                <p><strong>Description:</strong><br> {{ $company->description ?? '-' }}</p>
-            </div>
-
-        </div>
-
-    </div>
-</div>
-
-@endsection
+@extends('layouts.app') @section('title','Company overview')
+@section('content')<div class="page-heading"><div><div class="eyebrow">WORKSPACE OVERVIEW</div><h1>{{ $company->name }}</h1><p>{{ $company->email }} · {{ $company->status?'Active':'Suspended' }}</p></div><a class="btn btn-outline-secondary" href="{{ route('admin.companies.edit',$company) }}">Edit company</a></div>
+<div class="metrics">@foreach([['Workspace owners',$owners->count()],['Managers',$managers->count()],['Staff',$staffs->count()],['All members',$employeeCount]] as [$label,$value])<div class="metric"><div class="metric-label">{{ $label }}</div><div class="metric-value">{{ $value }}</div></div>@endforeach</div>
+<section class="panel mb-4"><h2>Company details</h2><p class="muted mt-3">{{ $company->description ?: 'No description provided.' }}</p><p>{{ $company->address }}</p><p>{{ $company->phone }}</p>@if($company->website)<a href="{{ $company->website }}" rel="noopener noreferrer">{{ $company->website }}</a>@endif</section>
+<section class="panel"><h2 class="mb-4">Workspace members</h2><div class="table-responsive"><table class="table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Account status</th></tr></thead><tbody>@forelse($owners->concat($managers)->concat($staffs) as $u)<tr><td>{{ $u->name }}</td><td>{{ $u->email }}</td><td>{{ $u->getRoleNames()->implode(', ') }}</td><td><span class="badge">{{ $u->status }}</span></td></tr>@empty<tr><td colspan="4" class="empty">No members yet. Add a company owner to get started.</td></tr>@endforelse</tbody></table></div></section>@endsection

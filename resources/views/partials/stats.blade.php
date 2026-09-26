@@ -1,43 +1,167 @@
-<div class="row g-4 mb-4">
+@hasrole('Super Admin')
 
-    <div class="col-md-3">
-        <div class="card-box">
-            <div class="d-flex justify-content-between">
-                <div>
-                    <div class="stat-number">{{ $companyCount }}</div>
-                    <div class="text-muted">All Company</div>
-                </div>
+<div class="row g-3">
 
-                <span class="badge-soft">+16.33%</span>
+    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+        <div class="card-box p-3">
+            <div class="stat-number fs-4">
+                {{ $totalCompanies }}
+            </div>
+            <div class="text-muted small">
+                Total Companies
             </div>
         </div>
     </div>
 
-    <div class="col-md-3">
-        <div class="card-box">
-            <div class="stat-number">{{ $ownerCount }}</div>
-            <div class="text-muted">All Owners</div>
-        </div>
-    </div>
 
-    <div class="col-md-3">
-        <div class="card-box">
-            <div class="d-flex justify-content-between">
-                <div>
-                    <div class="stat-number">1538</div>
-                    <div class="text-muted">All Customers</div>
-                </div>
-
-                <span class="badge bg-danger">-6.33%</span>
+    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+        <div class="card-box p-3">
+            <div class="stat-number fs-4 text-success">
+                {{ $activeCompanies }}
+            </div>
+            <div class="text-muted small">
+                Active Companies
             </div>
         </div>
     </div>
 
-    <div class="col-md-3">
-        <div class="card-box">
-            <div class="stat-number">864</div>
-            <div class="text-muted">Projects</div>
+
+    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+        <div class="card-box p-3">
+            <div class="stat-number fs-4 text-danger">
+                {{ $inactiveCompanies }}
+            </div>
+            <div class="text-muted small">
+                Inactive Companies
+            </div>
         </div>
     </div>
+
+
+    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+        <div class="card-box p-3">
+            <div class="stat-number fs-4 text-warning">
+                {{ $suspendedCompanies }}
+            </div>
+            <div class="text-muted small">
+                Suspended Companies
+            </div>
+        </div>
+    </div>
+
+
+    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+        <div class="card-box p-3">
+            <div class="stat-number fs-4">
+                {{ $companyAdmins }}
+            </div>
+            <div class="text-muted small">
+                Company Admins
+            </div>
+        </div>
+    </div>
+
+
+    <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+        <div class="card-box p-3">
+            <div class="stat-number fs-4">
+                {{ $employees }}
+            </div>
+            <div class="text-muted small">
+                Employees
+            </div>
+        </div>
+    </div>
+
 
 </div>
+
+
+@elsehasrole('Company Admin')
+
+
+<div class="row g-3">
+
+
+    <div class="col-xl-3 col-lg-4 col-md-6">
+        <div class="card-box p-3">
+
+            <div class="stat-number fs-4">
+                {{ $totalEmployees }}
+            </div>
+
+            <div class="text-muted small">
+                Total Employees
+            </div>
+
+        </div>
+    </div>
+
+
+
+    <div class="col-xl-3 col-lg-4 col-md-6">
+        <div class="card-box p-3">
+
+            <div class="stat-number fs-4 text-success">
+                {{ $activeEmployees }}
+            </div>
+
+            <div class="text-muted small">
+                Active Employees
+            </div>
+
+        </div>
+    </div>
+
+
+
+    <div class="col-xl-3 col-lg-4 col-md-6">
+        <div class="card-box p-3">
+
+            <div class="stat-number fs-4 text-danger">
+                {{ $inactiveEmployees }}
+            </div>
+
+            <div class="text-muted small">
+                Inactive Employees
+            </div>
+
+        </div>
+    </div>
+
+
+
+    <div class="col-xl-3 col-lg-4 col-md-6">
+        <div class="card-box p-3">
+
+            <div class="stat-number fs-4">
+                {{ $managers }}
+            </div>
+
+            <div class="text-muted small">
+                Managers
+            </div>
+
+        </div>
+    </div>
+
+
+
+    <div class="col-xl-3 col-lg-4 col-md-6">
+        <div class="card-box p-3">
+
+            <div class="stat-number fs-4">
+                {{ $staffs }}
+            </div>
+
+            <div class="text-muted small">
+                Staffs
+            </div>
+
+        </div>
+    </div>
+
+
+</div>
+
+@endhasrole
