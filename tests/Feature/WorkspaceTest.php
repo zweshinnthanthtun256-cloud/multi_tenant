@@ -64,6 +64,14 @@ class WorkspaceTest extends TestCase
         return Employee::create(['company_id' => $c->id, 'user_id' => $u->id, 'employee_code' => 'EMP-'.$u->id, 'joining_date' => today(), 'status' => 'active']);
     }
 
+    public function test_public_registration_page_renders(): void
+    {
+        $this->get(route('register'))
+            ->assertOk()
+            ->assertSee('Request workspace')
+            ->assertSee('Company name');
+    }
+
     public function test_company_admin_cannot_read_update_or_delete_another_company_employee(): void
     {
         $a = $this->company();
