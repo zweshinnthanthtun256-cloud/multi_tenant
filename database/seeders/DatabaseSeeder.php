@@ -21,8 +21,5 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             UserSeeder::class,
         ]);
-        if (filter_var(env('DEMO_MODE', false), FILTER_VALIDATE_BOOL)) {
-            $this->call(DemoSeeder::class);
-        }
     }
 }

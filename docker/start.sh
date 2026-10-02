@@ -19,9 +19,6 @@ mkdir -p storage/framework/cache storage/framework/sessions storage/framework/vi
 chown -R www-data:www-data storage bootstrap/cache
 
 php artisan migrate --force
-if [ "${DEMO_MODE:-false}" = "true" ]; then
-    php artisan db:seed --class=DemoSeeder --force
-fi
 php artisan optimize
 
 php artisan queue:work --tries=3 --backoff=60 --timeout=90 --sleep=3 &
