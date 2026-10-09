@@ -403,6 +403,17 @@ class WorkspaceTest extends TestCase
         $response->assertHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
     }
 
+    public function test_password_recovery_does_not_expose_mail_transport_failures(): void
+    {
+        Password::shouldReceive('sendResetLink')
+            ->once()
+            ->andThrow(new \RuntimeException('Mail transport unavailable'));
+
+        $this->post('/forgot-password', ['email' => 'customer@example.test'])
+            ->assertRedirect()
+            ->assertSessionHas('success');
+    }
+
     public function test_owner_removal_revokes_central_account_and_protects_last_owner(): void
     {
         $c = $this->company();

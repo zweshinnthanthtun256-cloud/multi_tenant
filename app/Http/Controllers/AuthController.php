@@ -42,7 +42,12 @@ class AuthController extends Controller
     public function forgot(Request $r)
     {
         $r->validate(['email' => 'required|email']);
-        Password::sendResetLink($r->only('email'));
+
+        try {
+            Password::sendResetLink($r->only('email'));
+        } catch (\Throwable $exception) {
+            report($exception);
+        }
 
         return back()->with('success', 'If that account exists, a password setup link has been sent.');
     }
