@@ -386,6 +386,18 @@ class WorkspaceTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_forwarded_https_scheme_is_preserved_behind_the_production_proxy(): void
+    {
+        $response = $this->withServerVariables(['REMOTE_ADDR' => '10.0.0.25'])
+            ->withHeaders([
+                'Host' => 'coreflow-crm-demo.onrender.com',
+                'X-Forwarded-Host' => 'coreflow-crm-demo.onrender.com',
+                'X-Forwarded-Proto' => 'https',
+            ])->post('/forgot-password', ['email' => 'unknown@example.test']);
+
+        $response->assertRedirect('https://coreflow-crm-demo.onrender.com');
+    }
+
     public function test_owner_removal_revokes_central_account_and_protects_last_owner(): void
     {
         $c = $this->company();
