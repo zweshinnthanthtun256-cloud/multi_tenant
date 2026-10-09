@@ -396,6 +396,11 @@ class WorkspaceTest extends TestCase
             ])->post('/forgot-password', ['email' => 'unknown@example.test']);
 
         $response->assertRedirect('https://coreflow-crm-demo.onrender.com');
+        $response->assertHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+        $response->assertHeader('X-Content-Type-Options', 'nosniff');
+        $response->assertHeader('X-Frame-Options', 'DENY');
+        $response->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+        $response->assertHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
     }
 
     public function test_owner_removal_revokes_central_account_and_protects_last_owner(): void
