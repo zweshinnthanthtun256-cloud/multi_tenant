@@ -17,7 +17,11 @@ class AuthController extends Controller
     {
         $r->merge(['email' => strtolower(trim((string) $r->input('email')))]);
         $credentials = $r->validate(['email' => 'required|email', 'password' => 'required|string']);
-        if (! Auth::attempt($credentials, $r->boolean('remember'))) {
+        $user = User::where('email', $credentials['email'])->first();
+        $passwordInfo = password_get_info((string) $user?->password);
+
+        if (! $user || ($passwordInfo['algoName'] ?? 'unknown') !== 'bcrypt'
+            || ! Auth::attempt($credentials, $r->boolean('remember'))) {
             return back()->withErrors(['email' => 'The email or password is incorrect.'])->onlyInput('email');
         }
         if (! Auth::user()->canAccessWorkspace()) {

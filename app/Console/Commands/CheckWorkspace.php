@@ -26,6 +26,10 @@ class CheckWorkspace extends Command
                     $query->whereColumn('employees.company_id', '!=', 'users.company_id')
                         ->orWhereNull('users.company_id');
                 })->count() === 0;
+            $checks['Stored passwords use Bcrypt'] = DB::table('users')
+                ->whereNotNull('password')
+                ->pluck('password')
+                ->every(fn (string $password) => (password_get_info($password)['algoName'] ?? 'unknown') === 'bcrypt');
         } catch (\Throwable $exception) {
             $checks['Database and schema checks'] = false;
         }

@@ -19,6 +19,7 @@ use App\Services\Onboarding;
 use App\Support\Workspace;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
@@ -370,6 +371,19 @@ class WorkspaceTest extends TestCase
             $this->post(route('login.submit'), ['email' => 'absent@example.test', 'password' => 'wrong'])->assertSessionHasErrors('email');
         }
         $this->post(route('login.submit'), ['email' => 'absent@example.test', 'password' => 'wrong'])->assertStatus(429);
+    }
+
+    public function test_invalid_stored_password_is_rejected_without_a_server_error(): void
+    {
+        $user = $this->user(null, 'Super Admin');
+        DB::table('users')->whereKey($user->id)->update(['password' => 'not-a-password-hash']);
+
+        $this->withServerVariables(['REMOTE_ADDR' => '198.51.100.25'])->post(route('login.submit'), [
+            'email' => $user->email,
+            'password' => 'not-a-password-hash',
+        ])->assertRedirect()->assertSessionHasErrors('email');
+
+        $this->assertGuest();
     }
 
     public function test_owner_removal_revokes_central_account_and_protects_last_owner(): void
