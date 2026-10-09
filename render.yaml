@@ -36,7 +36,19 @@ services:
       - key: CACHE_STORE
         value: database
       - key: MAIL_MAILER
-        value: log
+        value: smtp
+      - key: MAIL_HOST
+        value: smtp.gmail.com
+      - key: MAIL_PORT
+        value: "587"
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_FROM_ADDRESS
+        sync: false
+      - key: MAIL_FROM_NAME
+        value: SAASCon
       - key: SUPPORT_EMAIL
         value: admin@coreflow.test
       - key: AI_ENABLED
