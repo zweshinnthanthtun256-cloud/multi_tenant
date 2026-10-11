@@ -9,7 +9,9 @@ use App\Models\RegistrationRequest;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Role;
 
@@ -18,6 +20,19 @@ class Onboarding
     public function approve(int $id): User
     {
         return DB::transaction(function () use ($id) {
+            $defaultPassword = (string) config('onboarding.default_password');
+
+            $passwordValidator = Validator::make(
+                ['password' => $defaultPassword],
+                ['password' => ['required', Password::min(12)->mixedCase()->numbers()]],
+            );
+
+            if ($passwordValidator->fails()) {
+                throw ValidationException::withMessages([
+                    'password' => 'The onboarding default password must contain at least 12 characters, uppercase and lowercase letters, and a number.',
+                ]);
+            }
+
             $registration = RegistrationRequest::lockForUpdate()->findOrFail($id);
             if ($registration->status === 'approved') {
                 return User::where('email', $registration->email)->firstOrFail();
@@ -42,7 +57,7 @@ class Onboarding
                 throw $exception;
             }
             $user = User::create(['name' => $registration->username, 'email' => $registration->email,
-                'password' => Str::random(64), 'company_id' => $company->id, 'status' => 'active']);
+                'password' => $defaultPassword, 'company_id' => $company->id, 'status' => 'active']);
             $user->assignRole(Role::findOrCreate('Company Admin', 'web'));
             CompanyOwner::create(['name' => $user->name, 'email' => $user->email, 'phone' => $registration->phone ?? '',
                 'address' => $registration->address, 'company_id' => $company->id, 'user_id' => $user->id]);

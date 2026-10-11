@@ -45,6 +45,8 @@ services:
         value: SAASCon
       - key: SUPPORT_EMAIL
         value: admin@coreflow.test
+      - key: ONBOARDING_DEFAULT_PASSWORD
+        sync: false
       - key: AI_ENABLED
         value: "false"
       - key: BILLING_PAYMENT_INSTRUCTIONS

@@ -9,7 +9,6 @@ use App\Services\Onboarding;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Password;
 
 class AdminController extends Controller
 {
@@ -42,17 +41,9 @@ class AdminController extends Controller
 
     public function approve(int $id)
     {
-        $user = app(Onboarding::class)->approve($id);
+        app(Onboarding::class)->approve($id);
 
-        try {
-            $status = Password::sendResetLink(['email' => $user->email]);
-        } catch (\Throwable $exception) {
-            report($exception);
-
-            return back()->with('warning', 'Workspace approved, but the password setup email could not be sent. Verify the sender domain and resend the setup link.');
-        }
-
-        return back()->with('success', 'Workspace approved. Password setup link has been emailed successfully.');
+        return back()->with('success', 'Workspace approved. The company administrator can sign in with the configured default password.');
     }
 
     public function reject(int $id)

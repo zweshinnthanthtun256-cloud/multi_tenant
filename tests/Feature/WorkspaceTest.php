@@ -133,8 +133,10 @@ class WorkspaceTest extends TestCase
         $this->assertDatabaseCount('deals', 0);
     }
 
-    public function test_registration_approval_is_idempotent_and_password_is_not_predictable(): void
+    public function test_registration_approval_is_idempotent_and_uses_the_configured_default_password(): void
     {
+        config(['onboarding.default_password' => 'DefaultPass12345']);
+
         $r = RegistrationRequest::create(['role' => 'Super Admin', 'username' => 'Owner', 'email' => 'owner@example.test', 'company_name' => 'NewCo', 'status' => 'pending']);
         $u = app(Onboarding::class)->approve($r->id);
         $again = app(Onboarding::class)->approve($r->id);
@@ -142,7 +144,7 @@ class WorkspaceTest extends TestCase
         $this->assertDatabaseCount('companies', 1);
         $this->assertTrue($u->hasRole('Company Admin'));
         $this->assertFalse($u->hasRole('Super Admin'));
-        $this->assertFalse(Hash::check('password123', $u->password));
+        $this->assertTrue(Hash::check('DefaultPass12345', $u->password));
     }
 
     public function test_duplicate_company_name_is_rejected_during_registration_and_approval(): void
