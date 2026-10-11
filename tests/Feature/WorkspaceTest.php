@@ -354,7 +354,7 @@ class WorkspaceTest extends TestCase
         $this->assertFalse($c->fresh()->trashed());
     }
 
-    public function test_password_reset_requires_valid_token_and_unverified_accounts_are_gated(): void
+    public function test_password_reset_requires_valid_token_and_email_verification_is_not_required(): void
     {
         $c = $this->company();
         $u = $this->user($c);
@@ -364,7 +364,7 @@ class WorkspaceTest extends TestCase
         $this->assertTrue(Hash::check('AnotherSecure123', $u->fresh()->password));
         $this->post(route('password.update'), ['email' => $u->email, 'token' => $token, 'password' => 'AnotherSecure123', 'password_confirmation' => 'AnotherSecure123'])->assertSessionHasErrors('email');
         $u->forceFill(['email_verified_at' => null])->save();
-        $this->actingAs($u)->get(route('crm.dashboard'))->assertRedirect(route('verification.notice'));
+        $this->actingAs($u)->get(route('crm.dashboard'))->assertOk();
     }
 
     public function test_failed_login_has_feedback_and_is_throttled(): void

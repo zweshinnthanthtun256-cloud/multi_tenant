@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Auth\Events\PasswordReset;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Password;
@@ -63,21 +62,5 @@ class AuthController extends Controller
         return $status === Password::PasswordReset
             ? redirect()->route('admin.login')->with('success', __($status))
             : back()->withErrors(['email' => __($status)]);
-    }
-
-    public function verify(EmailVerificationRequest $r)
-    {
-        $r->fulfill();
-
-        return redirect()->route('dashboard');
-    }
-
-    public function resend(Request $r)
-    {
-        if (! $r->user()->hasVerifiedEmail()) {
-            $r->user()->sendEmailVerificationNotification();
-        }
-
-        return back()->with('success', 'Verification link sent. Check your inbox.');
     }
 }

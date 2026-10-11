@@ -73,7 +73,7 @@ class EmployeeController extends Controller
             'company_id' => $this->platform() ? 'required|exists:companies,id' : 'prohibited']);
         $company = Company::findOrFail($this->platform() ? $data['company_id'] : Workspace::id());
         abort_unless((int) $company->status === 1, 422);
-        $user = DB::transaction(function () use ($data, $company) {
+        DB::transaction(function () use ($data, $company) {
             Workspace::reserveSeat($company);
             $user = User::create(['name' => $data['name'], 'email' => strtolower($data['email']), 'password' => $data['password'], 'company_id' => $company->id, 'status' => 'active']);
             $user->assignRole(Role::findOrCreate($data['role'], 'web'));
@@ -81,11 +81,9 @@ class EmployeeController extends Controller
                 'phone' => $data['phone'] ?? null, 'position' => $data['position'] ?? null, 'joining_date' => now(), 'status' => 'active']);
             ActivityLogger::log('Employee created', 'Employee #'.$employee->id, $company->id);
 
-            return $user;
         });
-        $user->sendEmailVerificationNotification();
 
-        return redirect()->route($this->prefix().'.employees.index')->with('success', 'Team member created. Verification email sent.');
+        return redirect()->route($this->prefix().'.employees.index')->with('success', 'Team member created and ready to sign in.');
     }
 
     public function update(Request $r, Employee $employee)
@@ -96,9 +94,6 @@ class EmployeeController extends Controller
         DB::transaction(function () use ($employee, $data) {
             $user = $employee->user;
             $email = strtolower($data['email']);
-            if ($user->email !== $email) {
-                $user->email_verified_at = null;
-            }
             $user->fill(['name' => $data['name'], 'email' => $email, 'status' => $data['status']])->save();
             $user->syncRoles([$data['role']]);
             $employee->update(['phone' => $data['phone'] ?? null, 'position' => $data['position'] ?? null, 'status' => $data['status']]);

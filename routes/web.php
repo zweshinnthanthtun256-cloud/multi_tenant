@@ -30,12 +30,9 @@ Route::middleware('guest')->group(function () {
 });
 Route::post('/admin/logout', [AdminController::class, 'logout'])->middleware('auth')->name('logout');
 Route::middleware(['auth', 'active'])->group(function () {
-    Route::view('/email/verify', 'auth.verify')->name('verification.notice');
-    Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verify'])->middleware(['signed', 'throttle:6,1'])->name('verification.verify');
-    Route::post('/email/verification-notification', [AuthController::class, 'resend'])->middleware('throttle:6,1')->name('verification.send');
-    Route::get('/dashboard', [AuthController::class, 'dashboard'])->middleware('verified')->name('dashboard');
+    Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
 });
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'verified', 'role:Super Admin'])->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'role:Super Admin'])->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/registrations', [AdminController::class, 'registerList'])->name('registrations.index');
     Route::put('/registrations/{id}/approve', [AdminController::class, 'approve'])->name('registrations.approve');
@@ -52,7 +49,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'active', 'verified'
     Route::post('billing/{invoice}/paid', [BillingController::class, 'paid'])->name('billing.paid');
     Route::post('billing/{invoice}/reject', [BillingController::class, 'rejectPayment'])->name('billing.reject');
 });
-Route::middleware(['auth', 'active', 'verified', 'role:Company Admin'])->prefix('company-admin')->name('company_admin.')->group(function () {
+Route::middleware(['auth', 'active', 'role:Company Admin'])->prefix('company-admin')->name('company_admin.')->group(function () {
     Route::redirect('/dashboard', '/crm')->name('dashboard');
     Route::resource('employees', EmployeeController::class)->except('show');
     Route::patch('employees/{employee}/status', [EmployeeController::class, 'changeStatus'])->name('employees.status');
@@ -60,7 +57,7 @@ Route::middleware(['auth', 'active', 'verified', 'role:Company Admin'])->prefix(
     Route::post('invitations', [EmployeeInvitationController::class, 'store'])->middleware('throttle:10,1')->name('invitations.store');
     Route::delete('invitations/{invitation}', [EmployeeInvitationController::class, 'revoke'])->name('invitations.revoke');
 });
-Route::middleware(['auth', 'active', 'verified', 'role:Company Admin|Manager|Staff'])->group(function () {
+Route::middleware(['auth', 'active', 'role:Company Admin|Manager|Staff'])->group(function () {
     Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
     Route::post('/billing/cancel', [BillingController::class, 'cancel'])->name('billing.cancel');
     Route::post('/billing/{invoice}/submit-payment', [BillingController::class, 'submitPayment'])->name('billing.submit-payment');

@@ -6,11 +6,10 @@ use App\Helpers\ActivityLogger;
 use App\Models\Company;
 use App\Models\CompanyOwner;
 use App\Models\User;
+use App\Support\DefaultAccountPassword;
 use App\Support\Workspace;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Role;
 
@@ -46,19 +45,18 @@ class CompanyOwnerController extends Controller
     {
         $data = $r->validate(['company_id' => 'required|exists:companies,id', 'name' => 'required|string|max:120',
             'email' => 'required|email|max:255|unique:users,email', 'phone' => 'nullable|string|max:30', 'address' => 'nullable|string|max:500']);
-        $user = DB::transaction(function () use ($data) {
+        $defaultPassword = DefaultAccountPassword::value();
+        DB::transaction(function () use ($data, $defaultPassword) {
             $company = Company::findOrFail($data['company_id']);
             Workspace::reserveSeat($company);
-            $user = User::create(['name' => $data['name'], 'email' => strtolower($data['email']), 'company_id' => $company->id, 'password' => Str::random(64), 'status' => 'active']);
+            $user = User::create(['name' => $data['name'], 'email' => strtolower($data['email']), 'company_id' => $company->id, 'password' => $defaultPassword, 'status' => 'active']);
             $user->assignRole(Role::findOrCreate('Company Admin', 'web'));
             CompanyOwner::create(array_merge($data, ['email' => $user->email, 'phone' => $data['phone'] ?? '', 'user_id' => $user->id]));
             ActivityLogger::log('Owner created', 'User #'.$user->id, $company->id);
 
-            return $user;
         });
-        Password::sendResetLink(['email' => $user->email]);
 
-        return redirect()->route('admin.owners.index')->with('success', 'Owner created. A password setup link was requested.');
+        return redirect()->route('admin.owners.index')->with('success', 'Owner created and ready to sign in with the configured default password.');
     }
 
     public function update(Request $r, CompanyOwner $owner)
@@ -68,9 +66,6 @@ class CompanyOwnerController extends Controller
         DB::transaction(function () use ($owner, $data) {
             $owner->update(array_merge($data, ['phone' => $data['phone'] ?? '']));
             $user = $owner->user;
-            if ($user->email !== $data['email']) {
-                $user->email_verified_at = null;
-            }
             $user->fill(['name' => $data['name'], 'email' => strtolower($data['email'])])->save();
         });
 

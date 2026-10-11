@@ -7,11 +7,10 @@ use App\Models\Company;
 use App\Models\CompanyOwner;
 use App\Models\RegistrationRequest;
 use App\Models\User;
+use App\Support\DefaultAccountPassword;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Role;
 
@@ -20,18 +19,7 @@ class Onboarding
     public function approve(int $id): User
     {
         return DB::transaction(function () use ($id) {
-            $defaultPassword = (string) config('onboarding.default_password');
-
-            $passwordValidator = Validator::make(
-                ['password' => $defaultPassword],
-                ['password' => ['required', Password::min(12)->mixedCase()->numbers()]],
-            );
-
-            if ($passwordValidator->fails()) {
-                throw ValidationException::withMessages([
-                    'password' => 'The onboarding default password must contain at least 12 characters, uppercase and lowercase letters, and a number.',
-                ]);
-            }
+            $defaultPassword = DefaultAccountPassword::value();
 
             $registration = RegistrationRequest::lockForUpdate()->findOrFail($id);
             if ($registration->status === 'approved') {
