@@ -19,8 +19,6 @@ class Onboarding
     public function approve(int $id): User
     {
         return DB::transaction(function () use ($id) {
-            $defaultPassword = DefaultAccountPassword::value();
-
             $registration = RegistrationRequest::lockForUpdate()->findOrFail($id);
             if ($registration->status === 'approved') {
                 return User::where('email', $registration->email)->firstOrFail();
@@ -32,6 +30,7 @@ class Onboarding
             if (Company::withTrashed()->where('name', $companyName)->exists()) {
                 throw ValidationException::withMessages(['company_name' => 'A workspace with this company name already exists.']);
             }
+            $defaultPassword = DefaultAccountPassword::value();
             try {
                 $company = Company::create(['name' => $companyName,
                     'db_name' => 'shared_'.Str::uuid(), 'email' => $registration->email,
