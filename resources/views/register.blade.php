@@ -1,6 +1,6 @@
 @extends('layouts.auth')
 @section('title','Create a workspace')
-@section('content')<div class="eyebrow">LET'S GET STARTED</div><h1>A home for your business</h1><p>Request your workspace. After approval, we’ll email a secure link to set your password.</p>
+@section('content')<div class="eyebrow">LET'S GET STARTED</div><h1>A home for your business</h1><p>Request your workspace. After approval, your company administrator can sign in with the default password provided by the platform administrator.</p>
 <form method="POST" action="{{ route('register.submit') }}">@csrf
 @foreach(['username'=>'Your name','company_name'=>'Company name','email'=>'Work email','phone'=>'Phone (optional)'] as $name=>$label)
 <div class="field"><label class="form-label" for="{{ $name }}">{{ $label }}</label><input class="form-control" id="{{ $name }}" name="{{ $name }}" value="{{ old($name) }}" type="{{ $name==='email'?'email':'text' }}" @required($name !== 'phone') maxlength="120"></div>@endforeach

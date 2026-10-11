@@ -26,6 +26,6 @@ class ClientController extends Controller
         $data['email'] = strtolower($data['email']);
         RegistrationRequest::firstOrCreate(['email' => $data['email'], 'status' => 'pending'], $data + ['role' => 'Company Admin']);
 
-        return back()->with('success', 'Your workspace request is ready for review. We will email your setup link after approval.');
+        return back()->with('success', 'Your workspace request is ready for review. After approval, use the default password provided by the platform administrator to sign in.');
     }
 }
